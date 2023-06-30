@@ -88,5 +88,4 @@ SOUL_LAZARUS means that you have [Soul of Lazarus](https://bindingofisaacrebirth
 
 ## Limitations
 
- - Because of [Guppy's Collar](https://bindingofisaacrebirth.fandom.com/wiki/Guppy%27s_Collar) and [Broken Ankh](https://bindingofisaacrebirth.fandom.com/wiki/Broken_Ankh)'s RNG they are temporarily exluded from API for now.
  - API uses [NullItemID.ID_LAZARUS_SOUL_REVIVE](https://moddingofisaac.com/docs/rep/enums/NullItemID.html) and other mods that change it probably can break it (not sure on that one though).

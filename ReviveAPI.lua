@@ -5,7 +5,7 @@
 ModCallbacks.MC_PRE_PLAYER_REVIVE = "MC_PRE_PLAYER_REVIVE"
 ModCallbacks.MC_POST_PLAYER_REVIVE = "MC_POST_PLAYER_REVIVE"
 
-local currentVerssion = 1.0
+local currentVerssion = 1.1
 
 local function load(newversion)
     local mod = RegisterMod("Revive API", 1)
@@ -43,9 +43,9 @@ local function load(newversion)
             return player:HasCollectible(CollectibleType.COLLECTIBLE_JUDAS_SHADOW)
         end,
         
-        --[[function(player)
+        function(player)
             return player:HasTrinket(TrinketType.TRINKET_BROKEN_ANKH) and player:WillPlayerRevive()
-        end,]]
+        end,
         function(player)
             return player:HasCollectible(CollectibleType.COLLECTIBLE_ANKH)
         end,
@@ -54,9 +54,9 @@ local function load(newversion)
             return player:HasCollectible(CollectibleType.COLLECTIBLE_LAZARUS_RAGS)
         end,
 
-        --[[function(player)
+        function(player)
             return player:HasCollectible(CollectibleType.COLLECTIBLE_GUPPYS_COLLAR) and player:WillPlayerRevive()
-        end,]]
+        end,
         function(player)
             return player:HasCollectible(CollectibleType.COLLECTIBLE_INNER_CHILD)
         end,
@@ -100,31 +100,35 @@ local function load(newversion)
         end
         local effects = player:GetEffects()
         if not player:GetData().UsedLazarusSoul then    
-            if not effects:HasNullEffect(NullItemID.ID_LAZARUS_SOUL_REVIVE) then
-                effects:AddNullEffect(NullItemID.ID_LAZARUS_SOUL_REVIVE)
-            end
             
-            if not wasDeadPlayer[playerDataId].Dead then
-                local callbacks = Isaac.GetCallbacks(ModCallbacks.MC_PRE_PLAYER_REVIVE, true)
-                for _,callback in ipairs(callbacks) do
-                    local priority = callback.Priority
-                    local param = callback.Param or -1
-                    param = math.max(-1, param)
-                    if param == 0 then param = -1 end
-                    local vanillaRevive = false
-                    if priority > -(#revivePriorityTable + 1) then
-                        for i = #revivePriorityTable, math.abs(math.min(priority, -1)), -1 do
-                            vanillaRevive = vanillaRevive or revivePriorityTable[i](player)
-                        end
-                    end
-                    if param == -1 or param > 0 and player:HasCollectible(param) then
-                        local callbackRes = callback.Function(callback.Mod, player)
-                        if not vanillaRevive and callbackRes then
-                            wasDeadPlayer[playerDataId].Revive = param
+            local vanillaRevive = false
+            local callbacks = Isaac.GetCallbacks(ModCallbacks.MC_PRE_PLAYER_REVIVE, true)
+            for _,callback in ipairs(callbacks) do
+                local priority = callback.Priority
+                local param = callback.Param or -1
+                param = math.max(-1, param)
+                if param == 0 then param = -1 end
+                if priority > -(#revivePriorityTable + 1) then
+                    for i = #revivePriorityTable, math.abs(math.min(priority, -1)), -1 do
+                        if revivePriorityTable[i](player) then
+                            vanillaRevive = revivePriorityTable[i](player)
                             break
                         end
                     end
                 end
+                if param == -1 or param > 0 and player:HasCollectible(param) then
+                    local callbackRes = callback.Function(callback.Mod, player)
+                    if not vanillaRevive and callbackRes then
+                        wasDeadPlayer[playerDataId].Revive = param
+                        break
+                    else
+                        wasDeadPlayer[playerDataId].Revive = nil
+                    end
+                end
+            end
+            
+            if not effects:HasNullEffect(NullItemID.ID_LAZARUS_SOUL_REVIVE) then
+                effects:AddNullEffect(NullItemID.ID_LAZARUS_SOUL_REVIVE)
             end
             
             if wasDeadPlayer[playerDataId].Revive == nil then
